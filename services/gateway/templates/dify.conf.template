@@ -1,0 +1,107 @@
+# Rendered at container start by the nginx image's envsubst step.
+# Only PORT, DIFY_* and NGINX_* variables are substituted (see Dockerfile).
+
+# Railway terminates TLS at its edge and sends X-Forwarded-Proto; keep it.
+map $http_x_forwarded_proto $dify_forwarded_proto {
+    default $http_x_forwarded_proto;
+    ''      $scheme;
+}
+
+map $http_upgrade $dify_connection_upgrade {
+    default upgrade;
+    ''      '';
+}
+
+server {
+    listen ${PORT};
+    listen [::]:${PORT};
+    server_name _;
+
+    # Railway private DNS (*.railway.internal). Resolved per request, so a
+    # service that is still deploying does not stop the gateway from booting.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+    resolver_timeout 5s;
+
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
+    proxy_read_timeout ${NGINX_PROXY_TIMEOUT};
+    proxy_send_timeout ${NGINX_PROXY_TIMEOUT};
+    keepalive_timeout 65;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Console, web-app and service APIs
+    location /console/api {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /api {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /v1 {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /openapi {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /files {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /mcp {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+    location /triggers {
+        set $dify_api ${DIFY_API_UPSTREAM};
+        proxy_pass http://$dify_api;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+    }
+
+    # Real-time collaboration (Socket.IO) on the dedicated websocket API service
+    location /socket.io/ {
+        set $dify_socket ${DIFY_SOCKET_UPSTREAM};
+        proxy_pass http://$dify_socket;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $dify_connection_upgrade;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Plugin endpoints (webhooks exposed by installed plugins)
+    location /e/ {
+        set $dify_plugin_daemon ${DIFY_PLUGIN_DAEMON_UPSTREAM};
+        proxy_pass http://$dify_plugin_daemon;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Connection "";
+        proxy_set_header Dify-Hook-Url $dify_forwarded_proto://$host$request_uri;
+    }
+
+    # Everything else is the Next.js console / web apps
+    location / {
+        set $dify_web ${DIFY_WEB_UPSTREAM};
+        proxy_pass http://$dify_web;
+        include /etc/nginx/snippets/dify_proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $dify_connection_upgrade;
+    }
+}

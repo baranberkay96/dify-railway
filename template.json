@@ -1,0 +1,2270 @@
+{
+  "name": "Dify v1 AI App Studio",
+  "description": "Visual agent & RAG builder with plugins, code sandbox, workers and vector DB.",
+  "category": "AI/ML",
+  "tags": [
+    "dify",
+    "llm",
+    "agents",
+    "rag",
+    "workflow",
+    "weaviate",
+    "ai"
+  ],
+  "upstream": {
+    "repo": "langgenius/dify",
+    "version": "1.17.1",
+    "checked": "2026-10-10"
+  },
+  "services": {
+    "Gateway": {
+      "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nginx.svg",
+      "source": {
+        "repo": "baranberkay96/dify-railway",
+        "rootDirectory": "/services/gateway"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 120,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": true,
+      "targetPort": 8080,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "PORT": {
+          "defaultValue": "8080",
+          "description": "Port nginx listens on (public domain target).",
+          "required": false
+        },
+        "DIFY_WEB_UPSTREAM": {
+          "defaultValue": "${{Web.RAILWAY_PRIVATE_DOMAIN}}:3000",
+          "description": "Web (Next.js) private address.",
+          "required": false
+        },
+        "DIFY_API_UPSTREAM": {
+          "defaultValue": "${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "API private address.",
+          "required": false
+        },
+        "DIFY_SOCKET_UPSTREAM": {
+          "defaultValue": "${{API WebSocket.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "API WebSocket private address (/socket.io).",
+          "required": false
+        },
+        "DIFY_PLUGIN_DAEMON_UPSTREAM": {
+          "defaultValue": "${{Plugin Daemon.RAILWAY_PRIVATE_DOMAIN}}:5002",
+          "description": "Plugin Daemon private address (/e/ plugin endpoints).",
+          "required": false
+        },
+        "NGINX_CLIENT_MAX_BODY_SIZE": {
+          "defaultValue": "100M",
+          "description": "Max upload size through the gateway.",
+          "required": false
+        },
+        "NGINX_PROXY_TIMEOUT": {
+          "defaultValue": "3600s",
+          "description": "Proxy read/send timeout (long-running streams).",
+          "required": false
+        }
+      }
+    },
+    "Web": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-web:1.17.1"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/signin",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "PORT": {
+          "defaultValue": "3000",
+          "description": "Next.js listen port.",
+          "required": false
+        },
+        "HOSTNAME": {
+          "defaultValue": "::",
+          "description": "Listen on IPv4+IPv6.",
+          "required": false
+        },
+        "DEPLOY_ENV": {
+          "defaultValue": "PRODUCTION",
+          "description": "Deployment environment flag.",
+          "required": false
+        },
+        "CONSOLE_WEB_URL": {
+          "defaultValue": "${{API.CONSOLE_WEB_URL}}",
+          "description": "Public console URL (web prefix).",
+          "required": false
+        },
+        "SERVER_CONSOLE_API_URL": {
+          "defaultValue": "http://${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Private API URL for server-side rendering requests.",
+          "required": false
+        },
+        "NEXT_PUBLIC_SOCKET_URL": {
+          "defaultValue": "wss://${{Gateway.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public WebSocket origin for collaboration (update with a custom domain).",
+          "required": false
+        },
+        "MARKETPLACE_API_URL": {
+          "defaultValue": "https://marketplace.dify.ai",
+          "description": "Plugin marketplace API.",
+          "required": false
+        },
+        "MARKETPLACE_URL": {
+          "defaultValue": "https://marketplace.dify.ai",
+          "description": "Plugin marketplace site.",
+          "required": false
+        },
+        "NEXT_PUBLIC_ENABLE_AGENT_V2": {
+          "defaultValue": "true",
+          "description": "Show the Agent (v2) builder, backed by Agent Backend + Agent Sandbox.",
+          "required": false
+        },
+        "NEXT_TELEMETRY_DISABLED": {
+          "defaultValue": "1",
+          "description": "Disable Next.js telemetry.",
+          "required": false
+        },
+        "TEXT_GENERATION_TIMEOUT_MS": {
+          "defaultValue": "60000",
+          "description": "Client timeout for text generation (ms).",
+          "required": false
+        },
+        "LOOP_NODE_MAX_COUNT": {
+          "defaultValue": "100",
+          "description": "Max loop iterations in workflows.",
+          "required": false
+        },
+        "MAX_ITERATIONS_NUM": {
+          "defaultValue": "99",
+          "description": "Max iteration-node items.",
+          "required": false
+        },
+        "MAX_PARALLEL_LIMIT": {
+          "defaultValue": "10",
+          "description": "Max parallel branches.",
+          "required": false
+        },
+        "MAX_TOOLS_NUM": {
+          "defaultValue": "10",
+          "description": "Max tools per agent.",
+          "required": false
+        },
+        "MAX_TREE_DEPTH": {
+          "defaultValue": "50",
+          "description": "Max workflow nesting depth.",
+          "required": false
+        },
+        "TOP_K_MAX_VALUE": {
+          "defaultValue": "10",
+          "description": "Max retrieval top-k in the UI.",
+          "required": false
+        },
+        "INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH": {
+          "defaultValue": "4000",
+          "description": "Max chunk length for knowledge indexing.",
+          "required": false
+        },
+        "ALLOW_EMBED": {
+          "defaultValue": "false",
+          "description": "Allow embedding the console in iframes (published apps are always embeddable).",
+          "required": false
+        }
+      }
+    },
+    "API": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-api:1.17.1"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "MODE": {
+          "defaultValue": "api",
+          "description": "dify-api run mode.",
+          "required": false
+        },
+        "PORT": {
+          "defaultValue": "5001",
+          "description": "Port Railway health-checks and routes to.",
+          "required": false
+        },
+        "DIFY_BIND_ADDRESS": {
+          "defaultValue": "[::]",
+          "description": "Bind on IPv4+IPv6 so the private network can reach it.",
+          "required": false
+        },
+        "DIFY_PORT": {
+          "defaultValue": "5001",
+          "description": "Gunicorn listen port.",
+          "required": false
+        },
+        "SERVER_WORKER_AMOUNT": {
+          "defaultValue": "1",
+          "description": "Gunicorn worker processes (raise with more RAM/CPU).",
+          "required": false
+        },
+        "SERVER_WORKER_CLASS": {
+          "defaultValue": "gevent",
+          "description": "Gunicorn worker class.",
+          "required": false
+        },
+        "SERVER_WORKER_CONNECTIONS": {
+          "defaultValue": "10",
+          "description": "Concurrent connections per worker.",
+          "required": false
+        },
+        "GUNICORN_TIMEOUT": {
+          "defaultValue": "360",
+          "description": "Request timeout in seconds (long streaming responses).",
+          "required": false
+        },
+        "MIGRATION_ENABLED": {
+          "defaultValue": "true",
+          "description": "Run database migrations on boot (only this service migrates).",
+          "required": false
+        },
+        "INIT_PASSWORD": {
+          "defaultValue": "${{secret(16, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Password required on /install before the first admin account can be created. Read it from this variable.",
+          "required": false
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Flask signing/encryption key. Shared by API, WebSocket, Worker and Beat. Never change after first boot.",
+          "required": false
+        },
+        "DEPLOY_ENV": {
+          "defaultValue": "PRODUCTION",
+          "description": "Deployment environment flag.",
+          "required": false
+        },
+        "LOG_LEVEL": {
+          "defaultValue": "INFO",
+          "description": "Log verbosity (DEBUG, INFO, WARNING, ERROR).",
+          "required": false
+        },
+        "DIFY_PUBLIC_URL": {
+          "defaultValue": "https://${{Gateway.RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public base URL of this Dify instance (the Gateway). Change here when you add a custom domain.",
+          "required": false
+        },
+        "CONSOLE_API_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public URL of the console API (same origin via Gateway).",
+          "required": false
+        },
+        "CONSOLE_WEB_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public URL of the console web UI.",
+          "required": false
+        },
+        "SERVICE_API_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Base URL shown for the Service API (/v1).",
+          "required": false
+        },
+        "APP_API_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public URL of the web-app API.",
+          "required": false
+        },
+        "APP_WEB_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public URL of published web apps.",
+          "required": false
+        },
+        "FILES_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public prefix for signed file preview/download links.",
+          "required": false
+        },
+        "TRIGGER_URL": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Public prefix for workflow trigger webhooks.",
+          "required": false
+        },
+        "INTERNAL_FILES_URL": {
+          "defaultValue": "http://${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "Private URL used by Plugin Daemon and Agent services to fetch files.",
+          "required": false
+        },
+        "ENDPOINT_URL_TEMPLATE": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}/e/{hook_id}",
+          "description": "Public URL template for plugin endpoints (routed by the Gateway to Plugin Daemon).",
+          "required": false
+        },
+        "CONSOLE_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{DIFY_PUBLIC_URL}}",
+          "description": "Allowed origins for the console API (same origin by default).",
+          "required": false
+        },
+        "WEB_API_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "*",
+          "description": "Allowed origins for the public web-app API (embeds need *).",
+          "required": false
+        },
+        "ENABLE_COLLABORATION_MODE": {
+          "defaultValue": "true",
+          "description": "Real-time collaborative workflow editing via the API WebSocket service.",
+          "required": false
+        },
+        "DB_TYPE": {
+          "defaultValue": "postgresql",
+          "description": "Metadata database type.",
+          "required": false
+        },
+        "DB_HOST": {
+          "defaultValue": "${{Postgres.PGHOST}}",
+          "description": "Postgres private host.",
+          "required": false
+        },
+        "DB_PORT": {
+          "defaultValue": "${{Postgres.PGPORT}}",
+          "description": "Postgres port.",
+          "required": false
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{Postgres.PGUSER}}",
+          "description": "Postgres user.",
+          "required": false
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{Postgres.PGPASSWORD}}",
+          "description": "Postgres password.",
+          "required": false
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{Postgres.PGDATABASE}}",
+          "description": "Dify metadata database.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_SIZE": {
+          "defaultValue": "10",
+          "description": "DB pool size per process (kept below Postgres' default 100 connections across all services).",
+          "required": false
+        },
+        "SQLALCHEMY_MAX_OVERFLOW": {
+          "defaultValue": "5",
+          "description": "Extra DB connections allowed above the pool size.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_PRE_PING": {
+          "defaultValue": "true",
+          "description": "Validate pooled connections before use (survives idle network resets).",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_RECYCLE": {
+          "defaultValue": "3600",
+          "description": "Recycle DB connections after N seconds.",
+          "required": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{Redis.REDISHOST}}",
+          "description": "Redis private host.",
+          "required": false
+        },
+        "REDIS_PORT": {
+          "defaultValue": "${{Redis.REDISPORT}}",
+          "description": "Redis port.",
+          "required": false
+        },
+        "REDIS_USERNAME": {
+          "defaultValue": "${{Redis.REDISUSER}}",
+          "description": "Redis user.",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{Redis.REDIS_PASSWORD}}",
+          "description": "Redis password.",
+          "required": false
+        },
+        "REDIS_DB": {
+          "defaultValue": "0",
+          "description": "Redis DB index for cache/locks.",
+          "required": false
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "redis://${{Redis.REDISUSER}}:${{Redis.REDIS_PASSWORD}}@${{Redis.REDISHOST}}:${{Redis.REDISPORT}}/1",
+          "description": "Celery broker (Redis DB 1).",
+          "required": false
+        },
+        "CELERY_BACKEND": {
+          "defaultValue": "redis",
+          "description": "Celery result backend.",
+          "required": false
+        },
+        "STORAGE_TYPE": {
+          "defaultValue": "s3",
+          "description": "File storage backend: Railway Bucket via the S3 API.",
+          "required": false
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "${{Bucket.ENDPOINT}}",
+          "description": "Railway Bucket S3 endpoint.",
+          "required": false
+        },
+        "S3_REGION": {
+          "defaultValue": "${{Bucket.REGION}}",
+          "description": "Railway Bucket region.",
+          "required": false
+        },
+        "S3_BUCKET_NAME": {
+          "defaultValue": "${{Bucket.BUCKET}}",
+          "description": "Railway Bucket name (S3 API name).",
+          "required": false
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{Bucket.ACCESS_KEY_ID}}",
+          "description": "Railway Bucket access key.",
+          "required": false
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{Bucket.SECRET_ACCESS_KEY}}",
+          "description": "Railway Bucket secret key.",
+          "required": false
+        },
+        "S3_ADDRESS_STYLE": {
+          "defaultValue": "virtual",
+          "description": "S3 addressing style. Railway Buckets use virtual-hosted style; set 'path' only if the bucket's Credentials tab says so.",
+          "required": false
+        },
+        "S3_USE_AWS_MANAGED_IAM": {
+          "defaultValue": "false",
+          "description": "Use static keys, not AWS IAM roles.",
+          "required": false
+        },
+        "VECTOR_STORE": {
+          "defaultValue": "weaviate",
+          "description": "Vector database used for knowledge bases.",
+          "required": false
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "http://${{Weaviate.RAILWAY_PRIVATE_DOMAIN}}:8080",
+          "description": "Weaviate REST endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_GRPC_ENDPOINT": {
+          "defaultValue": "grpc://${{Weaviate.RAILWAY_PRIVATE_DOMAIN}}:50051",
+          "description": "Weaviate gRPC endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_API_KEY": {
+          "defaultValue": "${{Weaviate.AUTHENTICATION_APIKEY_ALLOWED_KEYS}}",
+          "description": "Weaviate API key.",
+          "required": false
+        },
+        "CODE_EXECUTION_ENDPOINT": {
+          "defaultValue": "http://${{Sandbox.RAILWAY_PRIVATE_DOMAIN}}:8194",
+          "description": "Code sandbox endpoint (private).",
+          "required": false
+        },
+        "CODE_EXECUTION_API_KEY": {
+          "defaultValue": "${{Sandbox.API_KEY}}",
+          "description": "Code sandbox API key.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTP_URL": {
+          "defaultValue": "http://${{SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "SSRF proxy for outbound HTTP from workflows/tools.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTPS_URL": {
+          "defaultValue": "http://${{SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "SSRF proxy for outbound HTTPS from workflows/tools.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_URL": {
+          "defaultValue": "http://${{Plugin Daemon.RAILWAY_PRIVATE_DOMAIN}}:5002",
+          "description": "Plugin Daemon endpoint (private).",
+          "required": false
+        },
+        "PLUGIN_DAEMON_KEY": {
+          "defaultValue": "${{Plugin Daemon.SERVER_KEY}}",
+          "description": "Key the API uses to call Plugin Daemon.",
+          "required": false
+        },
+        "INNER_API_KEY_FOR_PLUGIN": {
+          "defaultValue": "${{Plugin Daemon.DIFY_INNER_API_KEY}}",
+          "description": "Key Plugin Daemon / Agent Backend use to call the API's inner endpoints.",
+          "required": false
+        },
+        "PLUGIN_MAX_PACKAGE_SIZE": {
+          "defaultValue": "52428800",
+          "description": "Max plugin package size in bytes.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_TIMEOUT": {
+          "defaultValue": "600.0",
+          "description": "Timeout (s) for plugin invocations.",
+          "required": false
+        },
+        "MARKETPLACE_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable the Dify plugin marketplace.",
+          "required": false
+        },
+        "MARKETPLACE_API_URL": {
+          "defaultValue": "https://marketplace.dify.ai",
+          "description": "Plugin marketplace API.",
+          "required": false
+        },
+        "AGENT_BACKEND_BASE_URL": {
+          "defaultValue": "http://${{Agent Backend.RAILWAY_PRIVATE_DOMAIN}}:5050",
+          "description": "Dify Agent backend endpoint (private).",
+          "required": false
+        },
+        "AGENT_BACKEND_API_TOKEN": {
+          "defaultValue": "${{Agent Backend.DIFY_AGENT_API_TOKEN}}",
+          "description": "Bearer token for the Agent backend control plane.",
+          "required": false
+        }
+      }
+    },
+    "API WebSocket": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-api:1.17.1"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 600,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "MODE": {
+          "defaultValue": "api",
+          "description": "dify-api run mode.",
+          "required": false
+        },
+        "PORT": {
+          "defaultValue": "5001",
+          "description": "Port Railway health-checks and routes to.",
+          "required": false
+        },
+        "DIFY_BIND_ADDRESS": {
+          "defaultValue": "[::]",
+          "description": "Bind on IPv4+IPv6 so the private network can reach it.",
+          "required": false
+        },
+        "DIFY_PORT": {
+          "defaultValue": "5001",
+          "description": "Gunicorn listen port.",
+          "required": false
+        },
+        "SERVER_WORKER_AMOUNT": {
+          "defaultValue": "1",
+          "description": "Gunicorn worker processes (raise with more RAM/CPU).",
+          "required": false
+        },
+        "SERVER_WORKER_CLASS": {
+          "defaultValue": "geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
+          "description": "Gunicorn worker class.",
+          "required": false
+        },
+        "SERVER_WORKER_CONNECTIONS": {
+          "defaultValue": "1000",
+          "description": "Concurrent connections per worker.",
+          "required": false
+        },
+        "GUNICORN_TIMEOUT": {
+          "defaultValue": "360",
+          "description": "Request timeout in seconds (long streaming responses).",
+          "required": false
+        },
+        "MIGRATION_ENABLED": {
+          "defaultValue": "false",
+          "description": "Migrations are run by the API service only.",
+          "required": false
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{API.SECRET_KEY}}",
+          "description": "Flask signing/encryption key. Shared by API, WebSocket, Worker and Beat. Never change after first boot.",
+          "required": false
+        },
+        "DEPLOY_ENV": {
+          "defaultValue": "${{API.DEPLOY_ENV}}",
+          "description": "Deployment environment flag.",
+          "required": false
+        },
+        "LOG_LEVEL": {
+          "defaultValue": "${{API.LOG_LEVEL}}",
+          "description": "Log verbosity (DEBUG, INFO, WARNING, ERROR).",
+          "required": false
+        },
+        "DIFY_PUBLIC_URL": {
+          "defaultValue": "${{API.DIFY_PUBLIC_URL}}",
+          "description": "Public base URL of this Dify instance (the Gateway). Change here when you add a custom domain.",
+          "required": false
+        },
+        "CONSOLE_API_URL": {
+          "defaultValue": "${{API.CONSOLE_API_URL}}",
+          "description": "Public URL of the console API (same origin via Gateway).",
+          "required": false
+        },
+        "CONSOLE_WEB_URL": {
+          "defaultValue": "${{API.CONSOLE_WEB_URL}}",
+          "description": "Public URL of the console web UI.",
+          "required": false
+        },
+        "SERVICE_API_URL": {
+          "defaultValue": "${{API.SERVICE_API_URL}}",
+          "description": "Base URL shown for the Service API (/v1).",
+          "required": false
+        },
+        "APP_API_URL": {
+          "defaultValue": "${{API.APP_API_URL}}",
+          "description": "Public URL of the web-app API.",
+          "required": false
+        },
+        "APP_WEB_URL": {
+          "defaultValue": "${{API.APP_WEB_URL}}",
+          "description": "Public URL of published web apps.",
+          "required": false
+        },
+        "FILES_URL": {
+          "defaultValue": "${{API.FILES_URL}}",
+          "description": "Public prefix for signed file preview/download links.",
+          "required": false
+        },
+        "TRIGGER_URL": {
+          "defaultValue": "${{API.TRIGGER_URL}}",
+          "description": "Public prefix for workflow trigger webhooks.",
+          "required": false
+        },
+        "INTERNAL_FILES_URL": {
+          "defaultValue": "${{API.INTERNAL_FILES_URL}}",
+          "description": "Private URL used by Plugin Daemon and Agent services to fetch files.",
+          "required": false
+        },
+        "ENDPOINT_URL_TEMPLATE": {
+          "defaultValue": "${{API.ENDPOINT_URL_TEMPLATE}}",
+          "description": "Public URL template for plugin endpoints (routed by the Gateway to Plugin Daemon).",
+          "required": false
+        },
+        "CONSOLE_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.CONSOLE_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the console API (same origin by default).",
+          "required": false
+        },
+        "WEB_API_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.WEB_API_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the public web-app API (embeds need *).",
+          "required": false
+        },
+        "ENABLE_COLLABORATION_MODE": {
+          "defaultValue": "${{API.ENABLE_COLLABORATION_MODE}}",
+          "description": "Real-time collaborative workflow editing via the API WebSocket service.",
+          "required": false
+        },
+        "DB_TYPE": {
+          "defaultValue": "${{API.DB_TYPE}}",
+          "description": "Metadata database type.",
+          "required": false
+        },
+        "DB_HOST": {
+          "defaultValue": "${{API.DB_HOST}}",
+          "description": "Postgres private host.",
+          "required": false
+        },
+        "DB_PORT": {
+          "defaultValue": "${{API.DB_PORT}}",
+          "description": "Postgres port.",
+          "required": false
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{API.DB_USERNAME}}",
+          "description": "Postgres user.",
+          "required": false
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{API.DB_PASSWORD}}",
+          "description": "Postgres password.",
+          "required": false
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{API.DB_DATABASE}}",
+          "description": "Dify metadata database.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_SIZE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_SIZE}}",
+          "description": "DB pool size per process (kept below Postgres' default 100 connections across all services).",
+          "required": false
+        },
+        "SQLALCHEMY_MAX_OVERFLOW": {
+          "defaultValue": "${{API.SQLALCHEMY_MAX_OVERFLOW}}",
+          "description": "Extra DB connections allowed above the pool size.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_PRE_PING": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_PRE_PING}}",
+          "description": "Validate pooled connections before use (survives idle network resets).",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_RECYCLE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_RECYCLE}}",
+          "description": "Recycle DB connections after N seconds.",
+          "required": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{API.REDIS_HOST}}",
+          "description": "Redis private host.",
+          "required": false
+        },
+        "REDIS_PORT": {
+          "defaultValue": "${{API.REDIS_PORT}}",
+          "description": "Redis port.",
+          "required": false
+        },
+        "REDIS_USERNAME": {
+          "defaultValue": "${{API.REDIS_USERNAME}}",
+          "description": "Redis user.",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{API.REDIS_PASSWORD}}",
+          "description": "Redis password.",
+          "required": false
+        },
+        "REDIS_DB": {
+          "defaultValue": "${{API.REDIS_DB}}",
+          "description": "Redis DB index for cache/locks.",
+          "required": false
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "${{API.CELERY_BROKER_URL}}",
+          "description": "Celery broker (Redis DB 1).",
+          "required": false
+        },
+        "CELERY_BACKEND": {
+          "defaultValue": "${{API.CELERY_BACKEND}}",
+          "description": "Celery result backend.",
+          "required": false
+        },
+        "STORAGE_TYPE": {
+          "defaultValue": "${{API.STORAGE_TYPE}}",
+          "description": "File storage backend: Railway Bucket via the S3 API.",
+          "required": false
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "${{API.S3_ENDPOINT}}",
+          "description": "Railway Bucket S3 endpoint.",
+          "required": false
+        },
+        "S3_REGION": {
+          "defaultValue": "${{API.S3_REGION}}",
+          "description": "Railway Bucket region.",
+          "required": false
+        },
+        "S3_BUCKET_NAME": {
+          "defaultValue": "${{API.S3_BUCKET_NAME}}",
+          "description": "Railway Bucket name (S3 API name).",
+          "required": false
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{API.S3_ACCESS_KEY}}",
+          "description": "Railway Bucket access key.",
+          "required": false
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{API.S3_SECRET_KEY}}",
+          "description": "Railway Bucket secret key.",
+          "required": false
+        },
+        "S3_ADDRESS_STYLE": {
+          "defaultValue": "${{API.S3_ADDRESS_STYLE}}",
+          "description": "S3 addressing style. Railway Buckets use virtual-hosted style; set 'path' only if the bucket's Credentials tab says so.",
+          "required": false
+        },
+        "S3_USE_AWS_MANAGED_IAM": {
+          "defaultValue": "${{API.S3_USE_AWS_MANAGED_IAM}}",
+          "description": "Use static keys, not AWS IAM roles.",
+          "required": false
+        },
+        "VECTOR_STORE": {
+          "defaultValue": "${{API.VECTOR_STORE}}",
+          "description": "Vector database used for knowledge bases.",
+          "required": false
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_ENDPOINT}}",
+          "description": "Weaviate REST endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_GRPC_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_GRPC_ENDPOINT}}",
+          "description": "Weaviate gRPC endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_API_KEY": {
+          "defaultValue": "${{API.WEAVIATE_API_KEY}}",
+          "description": "Weaviate API key.",
+          "required": false
+        },
+        "CODE_EXECUTION_ENDPOINT": {
+          "defaultValue": "${{API.CODE_EXECUTION_ENDPOINT}}",
+          "description": "Code sandbox endpoint (private).",
+          "required": false
+        },
+        "CODE_EXECUTION_API_KEY": {
+          "defaultValue": "${{API.CODE_EXECUTION_API_KEY}}",
+          "description": "Code sandbox API key.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTP_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTP_URL}}",
+          "description": "SSRF proxy for outbound HTTP from workflows/tools.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTPS_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTPS_URL}}",
+          "description": "SSRF proxy for outbound HTTPS from workflows/tools.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_URL": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_URL}}",
+          "description": "Plugin Daemon endpoint (private).",
+          "required": false
+        },
+        "PLUGIN_DAEMON_KEY": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_KEY}}",
+          "description": "Key the API uses to call Plugin Daemon.",
+          "required": false
+        },
+        "INNER_API_KEY_FOR_PLUGIN": {
+          "defaultValue": "${{API.INNER_API_KEY_FOR_PLUGIN}}",
+          "description": "Key Plugin Daemon / Agent Backend use to call the API's inner endpoints.",
+          "required": false
+        },
+        "PLUGIN_MAX_PACKAGE_SIZE": {
+          "defaultValue": "${{API.PLUGIN_MAX_PACKAGE_SIZE}}",
+          "description": "Max plugin package size in bytes.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_TIMEOUT": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_TIMEOUT}}",
+          "description": "Timeout (s) for plugin invocations.",
+          "required": false
+        },
+        "MARKETPLACE_ENABLED": {
+          "defaultValue": "${{API.MARKETPLACE_ENABLED}}",
+          "description": "Enable the Dify plugin marketplace.",
+          "required": false
+        },
+        "MARKETPLACE_API_URL": {
+          "defaultValue": "${{API.MARKETPLACE_API_URL}}",
+          "description": "Plugin marketplace API.",
+          "required": false
+        },
+        "AGENT_BACKEND_BASE_URL": {
+          "defaultValue": "${{API.AGENT_BACKEND_BASE_URL}}",
+          "description": "Dify Agent backend endpoint (private).",
+          "required": false
+        },
+        "AGENT_BACKEND_API_TOKEN": {
+          "defaultValue": "${{API.AGENT_BACKEND_API_TOKEN}}",
+          "description": "Bearer token for the Agent backend control plane.",
+          "required": false
+        }
+      }
+    },
+    "Worker": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-api:1.17.1"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "MODE": {
+          "defaultValue": "worker",
+          "description": "dify-api run mode: Celery worker for all queues.",
+          "required": false
+        },
+        "MIGRATION_ENABLED": {
+          "defaultValue": "false",
+          "description": "Migrations are run by the API service only.",
+          "required": false
+        },
+        "CELERY_WORKER_AMOUNT": {
+          "defaultValue": "4",
+          "description": "Celery concurrency (gevent greenlets) per replica.",
+          "required": false
+        },
+        "CELERY_AUTO_SCALE": {
+          "defaultValue": "false",
+          "description": "Autoscale Celery concurrency by CPU count.",
+          "required": false
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{API.SECRET_KEY}}",
+          "description": "Flask signing/encryption key. Shared by API, WebSocket, Worker and Beat. Never change after first boot.",
+          "required": false
+        },
+        "DEPLOY_ENV": {
+          "defaultValue": "${{API.DEPLOY_ENV}}",
+          "description": "Deployment environment flag.",
+          "required": false
+        },
+        "LOG_LEVEL": {
+          "defaultValue": "${{API.LOG_LEVEL}}",
+          "description": "Log verbosity (DEBUG, INFO, WARNING, ERROR).",
+          "required": false
+        },
+        "DIFY_PUBLIC_URL": {
+          "defaultValue": "${{API.DIFY_PUBLIC_URL}}",
+          "description": "Public base URL of this Dify instance (the Gateway). Change here when you add a custom domain.",
+          "required": false
+        },
+        "CONSOLE_API_URL": {
+          "defaultValue": "${{API.CONSOLE_API_URL}}",
+          "description": "Public URL of the console API (same origin via Gateway).",
+          "required": false
+        },
+        "CONSOLE_WEB_URL": {
+          "defaultValue": "${{API.CONSOLE_WEB_URL}}",
+          "description": "Public URL of the console web UI.",
+          "required": false
+        },
+        "SERVICE_API_URL": {
+          "defaultValue": "${{API.SERVICE_API_URL}}",
+          "description": "Base URL shown for the Service API (/v1).",
+          "required": false
+        },
+        "APP_API_URL": {
+          "defaultValue": "${{API.APP_API_URL}}",
+          "description": "Public URL of the web-app API.",
+          "required": false
+        },
+        "APP_WEB_URL": {
+          "defaultValue": "${{API.APP_WEB_URL}}",
+          "description": "Public URL of published web apps.",
+          "required": false
+        },
+        "FILES_URL": {
+          "defaultValue": "${{API.FILES_URL}}",
+          "description": "Public prefix for signed file preview/download links.",
+          "required": false
+        },
+        "TRIGGER_URL": {
+          "defaultValue": "${{API.TRIGGER_URL}}",
+          "description": "Public prefix for workflow trigger webhooks.",
+          "required": false
+        },
+        "INTERNAL_FILES_URL": {
+          "defaultValue": "${{API.INTERNAL_FILES_URL}}",
+          "description": "Private URL used by Plugin Daemon and Agent services to fetch files.",
+          "required": false
+        },
+        "ENDPOINT_URL_TEMPLATE": {
+          "defaultValue": "${{API.ENDPOINT_URL_TEMPLATE}}",
+          "description": "Public URL template for plugin endpoints (routed by the Gateway to Plugin Daemon).",
+          "required": false
+        },
+        "CONSOLE_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.CONSOLE_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the console API (same origin by default).",
+          "required": false
+        },
+        "WEB_API_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.WEB_API_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the public web-app API (embeds need *).",
+          "required": false
+        },
+        "ENABLE_COLLABORATION_MODE": {
+          "defaultValue": "${{API.ENABLE_COLLABORATION_MODE}}",
+          "description": "Real-time collaborative workflow editing via the API WebSocket service.",
+          "required": false
+        },
+        "DB_TYPE": {
+          "defaultValue": "${{API.DB_TYPE}}",
+          "description": "Metadata database type.",
+          "required": false
+        },
+        "DB_HOST": {
+          "defaultValue": "${{API.DB_HOST}}",
+          "description": "Postgres private host.",
+          "required": false
+        },
+        "DB_PORT": {
+          "defaultValue": "${{API.DB_PORT}}",
+          "description": "Postgres port.",
+          "required": false
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{API.DB_USERNAME}}",
+          "description": "Postgres user.",
+          "required": false
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{API.DB_PASSWORD}}",
+          "description": "Postgres password.",
+          "required": false
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{API.DB_DATABASE}}",
+          "description": "Dify metadata database.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_SIZE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_SIZE}}",
+          "description": "DB pool size per process (kept below Postgres' default 100 connections across all services).",
+          "required": false
+        },
+        "SQLALCHEMY_MAX_OVERFLOW": {
+          "defaultValue": "${{API.SQLALCHEMY_MAX_OVERFLOW}}",
+          "description": "Extra DB connections allowed above the pool size.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_PRE_PING": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_PRE_PING}}",
+          "description": "Validate pooled connections before use (survives idle network resets).",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_RECYCLE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_RECYCLE}}",
+          "description": "Recycle DB connections after N seconds.",
+          "required": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{API.REDIS_HOST}}",
+          "description": "Redis private host.",
+          "required": false
+        },
+        "REDIS_PORT": {
+          "defaultValue": "${{API.REDIS_PORT}}",
+          "description": "Redis port.",
+          "required": false
+        },
+        "REDIS_USERNAME": {
+          "defaultValue": "${{API.REDIS_USERNAME}}",
+          "description": "Redis user.",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{API.REDIS_PASSWORD}}",
+          "description": "Redis password.",
+          "required": false
+        },
+        "REDIS_DB": {
+          "defaultValue": "${{API.REDIS_DB}}",
+          "description": "Redis DB index for cache/locks.",
+          "required": false
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "${{API.CELERY_BROKER_URL}}",
+          "description": "Celery broker (Redis DB 1).",
+          "required": false
+        },
+        "CELERY_BACKEND": {
+          "defaultValue": "${{API.CELERY_BACKEND}}",
+          "description": "Celery result backend.",
+          "required": false
+        },
+        "STORAGE_TYPE": {
+          "defaultValue": "${{API.STORAGE_TYPE}}",
+          "description": "File storage backend: Railway Bucket via the S3 API.",
+          "required": false
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "${{API.S3_ENDPOINT}}",
+          "description": "Railway Bucket S3 endpoint.",
+          "required": false
+        },
+        "S3_REGION": {
+          "defaultValue": "${{API.S3_REGION}}",
+          "description": "Railway Bucket region.",
+          "required": false
+        },
+        "S3_BUCKET_NAME": {
+          "defaultValue": "${{API.S3_BUCKET_NAME}}",
+          "description": "Railway Bucket name (S3 API name).",
+          "required": false
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{API.S3_ACCESS_KEY}}",
+          "description": "Railway Bucket access key.",
+          "required": false
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{API.S3_SECRET_KEY}}",
+          "description": "Railway Bucket secret key.",
+          "required": false
+        },
+        "S3_ADDRESS_STYLE": {
+          "defaultValue": "${{API.S3_ADDRESS_STYLE}}",
+          "description": "S3 addressing style. Railway Buckets use virtual-hosted style; set 'path' only if the bucket's Credentials tab says so.",
+          "required": false
+        },
+        "S3_USE_AWS_MANAGED_IAM": {
+          "defaultValue": "${{API.S3_USE_AWS_MANAGED_IAM}}",
+          "description": "Use static keys, not AWS IAM roles.",
+          "required": false
+        },
+        "VECTOR_STORE": {
+          "defaultValue": "${{API.VECTOR_STORE}}",
+          "description": "Vector database used for knowledge bases.",
+          "required": false
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_ENDPOINT}}",
+          "description": "Weaviate REST endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_GRPC_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_GRPC_ENDPOINT}}",
+          "description": "Weaviate gRPC endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_API_KEY": {
+          "defaultValue": "${{API.WEAVIATE_API_KEY}}",
+          "description": "Weaviate API key.",
+          "required": false
+        },
+        "CODE_EXECUTION_ENDPOINT": {
+          "defaultValue": "${{API.CODE_EXECUTION_ENDPOINT}}",
+          "description": "Code sandbox endpoint (private).",
+          "required": false
+        },
+        "CODE_EXECUTION_API_KEY": {
+          "defaultValue": "${{API.CODE_EXECUTION_API_KEY}}",
+          "description": "Code sandbox API key.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTP_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTP_URL}}",
+          "description": "SSRF proxy for outbound HTTP from workflows/tools.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTPS_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTPS_URL}}",
+          "description": "SSRF proxy for outbound HTTPS from workflows/tools.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_URL": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_URL}}",
+          "description": "Plugin Daemon endpoint (private).",
+          "required": false
+        },
+        "PLUGIN_DAEMON_KEY": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_KEY}}",
+          "description": "Key the API uses to call Plugin Daemon.",
+          "required": false
+        },
+        "INNER_API_KEY_FOR_PLUGIN": {
+          "defaultValue": "${{API.INNER_API_KEY_FOR_PLUGIN}}",
+          "description": "Key Plugin Daemon / Agent Backend use to call the API's inner endpoints.",
+          "required": false
+        },
+        "PLUGIN_MAX_PACKAGE_SIZE": {
+          "defaultValue": "${{API.PLUGIN_MAX_PACKAGE_SIZE}}",
+          "description": "Max plugin package size in bytes.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_TIMEOUT": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_TIMEOUT}}",
+          "description": "Timeout (s) for plugin invocations.",
+          "required": false
+        },
+        "MARKETPLACE_ENABLED": {
+          "defaultValue": "${{API.MARKETPLACE_ENABLED}}",
+          "description": "Enable the Dify plugin marketplace.",
+          "required": false
+        },
+        "MARKETPLACE_API_URL": {
+          "defaultValue": "${{API.MARKETPLACE_API_URL}}",
+          "description": "Plugin marketplace API.",
+          "required": false
+        },
+        "AGENT_BACKEND_BASE_URL": {
+          "defaultValue": "${{API.AGENT_BACKEND_BASE_URL}}",
+          "description": "Dify Agent backend endpoint (private).",
+          "required": false
+        },
+        "AGENT_BACKEND_API_TOKEN": {
+          "defaultValue": "${{API.AGENT_BACKEND_API_TOKEN}}",
+          "description": "Bearer token for the Agent backend control plane.",
+          "required": false
+        }
+      }
+    },
+    "Worker Beat": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-api:1.17.1"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "MODE": {
+          "defaultValue": "beat",
+          "description": "dify-api run mode: Celery beat scheduler (run exactly one).",
+          "required": false
+        },
+        "MIGRATION_ENABLED": {
+          "defaultValue": "false",
+          "description": "Migrations are run by the API service only.",
+          "required": false
+        },
+        "SECRET_KEY": {
+          "defaultValue": "${{API.SECRET_KEY}}",
+          "description": "Flask signing/encryption key. Shared by API, WebSocket, Worker and Beat. Never change after first boot.",
+          "required": false
+        },
+        "DEPLOY_ENV": {
+          "defaultValue": "${{API.DEPLOY_ENV}}",
+          "description": "Deployment environment flag.",
+          "required": false
+        },
+        "LOG_LEVEL": {
+          "defaultValue": "${{API.LOG_LEVEL}}",
+          "description": "Log verbosity (DEBUG, INFO, WARNING, ERROR).",
+          "required": false
+        },
+        "DIFY_PUBLIC_URL": {
+          "defaultValue": "${{API.DIFY_PUBLIC_URL}}",
+          "description": "Public base URL of this Dify instance (the Gateway). Change here when you add a custom domain.",
+          "required": false
+        },
+        "CONSOLE_API_URL": {
+          "defaultValue": "${{API.CONSOLE_API_URL}}",
+          "description": "Public URL of the console API (same origin via Gateway).",
+          "required": false
+        },
+        "CONSOLE_WEB_URL": {
+          "defaultValue": "${{API.CONSOLE_WEB_URL}}",
+          "description": "Public URL of the console web UI.",
+          "required": false
+        },
+        "SERVICE_API_URL": {
+          "defaultValue": "${{API.SERVICE_API_URL}}",
+          "description": "Base URL shown for the Service API (/v1).",
+          "required": false
+        },
+        "APP_API_URL": {
+          "defaultValue": "${{API.APP_API_URL}}",
+          "description": "Public URL of the web-app API.",
+          "required": false
+        },
+        "APP_WEB_URL": {
+          "defaultValue": "${{API.APP_WEB_URL}}",
+          "description": "Public URL of published web apps.",
+          "required": false
+        },
+        "FILES_URL": {
+          "defaultValue": "${{API.FILES_URL}}",
+          "description": "Public prefix for signed file preview/download links.",
+          "required": false
+        },
+        "TRIGGER_URL": {
+          "defaultValue": "${{API.TRIGGER_URL}}",
+          "description": "Public prefix for workflow trigger webhooks.",
+          "required": false
+        },
+        "INTERNAL_FILES_URL": {
+          "defaultValue": "${{API.INTERNAL_FILES_URL}}",
+          "description": "Private URL used by Plugin Daemon and Agent services to fetch files.",
+          "required": false
+        },
+        "ENDPOINT_URL_TEMPLATE": {
+          "defaultValue": "${{API.ENDPOINT_URL_TEMPLATE}}",
+          "description": "Public URL template for plugin endpoints (routed by the Gateway to Plugin Daemon).",
+          "required": false
+        },
+        "CONSOLE_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.CONSOLE_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the console API (same origin by default).",
+          "required": false
+        },
+        "WEB_API_CORS_ALLOW_ORIGINS": {
+          "defaultValue": "${{API.WEB_API_CORS_ALLOW_ORIGINS}}",
+          "description": "Allowed origins for the public web-app API (embeds need *).",
+          "required": false
+        },
+        "ENABLE_COLLABORATION_MODE": {
+          "defaultValue": "${{API.ENABLE_COLLABORATION_MODE}}",
+          "description": "Real-time collaborative workflow editing via the API WebSocket service.",
+          "required": false
+        },
+        "DB_TYPE": {
+          "defaultValue": "${{API.DB_TYPE}}",
+          "description": "Metadata database type.",
+          "required": false
+        },
+        "DB_HOST": {
+          "defaultValue": "${{API.DB_HOST}}",
+          "description": "Postgres private host.",
+          "required": false
+        },
+        "DB_PORT": {
+          "defaultValue": "${{API.DB_PORT}}",
+          "description": "Postgres port.",
+          "required": false
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{API.DB_USERNAME}}",
+          "description": "Postgres user.",
+          "required": false
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{API.DB_PASSWORD}}",
+          "description": "Postgres password.",
+          "required": false
+        },
+        "DB_DATABASE": {
+          "defaultValue": "${{API.DB_DATABASE}}",
+          "description": "Dify metadata database.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_SIZE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_SIZE}}",
+          "description": "DB pool size per process (kept below Postgres' default 100 connections across all services).",
+          "required": false
+        },
+        "SQLALCHEMY_MAX_OVERFLOW": {
+          "defaultValue": "${{API.SQLALCHEMY_MAX_OVERFLOW}}",
+          "description": "Extra DB connections allowed above the pool size.",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_PRE_PING": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_PRE_PING}}",
+          "description": "Validate pooled connections before use (survives idle network resets).",
+          "required": false
+        },
+        "SQLALCHEMY_POOL_RECYCLE": {
+          "defaultValue": "${{API.SQLALCHEMY_POOL_RECYCLE}}",
+          "description": "Recycle DB connections after N seconds.",
+          "required": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{API.REDIS_HOST}}",
+          "description": "Redis private host.",
+          "required": false
+        },
+        "REDIS_PORT": {
+          "defaultValue": "${{API.REDIS_PORT}}",
+          "description": "Redis port.",
+          "required": false
+        },
+        "REDIS_USERNAME": {
+          "defaultValue": "${{API.REDIS_USERNAME}}",
+          "description": "Redis user.",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{API.REDIS_PASSWORD}}",
+          "description": "Redis password.",
+          "required": false
+        },
+        "REDIS_DB": {
+          "defaultValue": "${{API.REDIS_DB}}",
+          "description": "Redis DB index for cache/locks.",
+          "required": false
+        },
+        "CELERY_BROKER_URL": {
+          "defaultValue": "${{API.CELERY_BROKER_URL}}",
+          "description": "Celery broker (Redis DB 1).",
+          "required": false
+        },
+        "CELERY_BACKEND": {
+          "defaultValue": "${{API.CELERY_BACKEND}}",
+          "description": "Celery result backend.",
+          "required": false
+        },
+        "STORAGE_TYPE": {
+          "defaultValue": "${{API.STORAGE_TYPE}}",
+          "description": "File storage backend: Railway Bucket via the S3 API.",
+          "required": false
+        },
+        "S3_ENDPOINT": {
+          "defaultValue": "${{API.S3_ENDPOINT}}",
+          "description": "Railway Bucket S3 endpoint.",
+          "required": false
+        },
+        "S3_REGION": {
+          "defaultValue": "${{API.S3_REGION}}",
+          "description": "Railway Bucket region.",
+          "required": false
+        },
+        "S3_BUCKET_NAME": {
+          "defaultValue": "${{API.S3_BUCKET_NAME}}",
+          "description": "Railway Bucket name (S3 API name).",
+          "required": false
+        },
+        "S3_ACCESS_KEY": {
+          "defaultValue": "${{API.S3_ACCESS_KEY}}",
+          "description": "Railway Bucket access key.",
+          "required": false
+        },
+        "S3_SECRET_KEY": {
+          "defaultValue": "${{API.S3_SECRET_KEY}}",
+          "description": "Railway Bucket secret key.",
+          "required": false
+        },
+        "S3_ADDRESS_STYLE": {
+          "defaultValue": "${{API.S3_ADDRESS_STYLE}}",
+          "description": "S3 addressing style. Railway Buckets use virtual-hosted style; set 'path' only if the bucket's Credentials tab says so.",
+          "required": false
+        },
+        "S3_USE_AWS_MANAGED_IAM": {
+          "defaultValue": "${{API.S3_USE_AWS_MANAGED_IAM}}",
+          "description": "Use static keys, not AWS IAM roles.",
+          "required": false
+        },
+        "VECTOR_STORE": {
+          "defaultValue": "${{API.VECTOR_STORE}}",
+          "description": "Vector database used for knowledge bases.",
+          "required": false
+        },
+        "WEAVIATE_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_ENDPOINT}}",
+          "description": "Weaviate REST endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_GRPC_ENDPOINT": {
+          "defaultValue": "${{API.WEAVIATE_GRPC_ENDPOINT}}",
+          "description": "Weaviate gRPC endpoint (private).",
+          "required": false
+        },
+        "WEAVIATE_API_KEY": {
+          "defaultValue": "${{API.WEAVIATE_API_KEY}}",
+          "description": "Weaviate API key.",
+          "required": false
+        },
+        "CODE_EXECUTION_ENDPOINT": {
+          "defaultValue": "${{API.CODE_EXECUTION_ENDPOINT}}",
+          "description": "Code sandbox endpoint (private).",
+          "required": false
+        },
+        "CODE_EXECUTION_API_KEY": {
+          "defaultValue": "${{API.CODE_EXECUTION_API_KEY}}",
+          "description": "Code sandbox API key.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTP_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTP_URL}}",
+          "description": "SSRF proxy for outbound HTTP from workflows/tools.",
+          "required": false
+        },
+        "SSRF_PROXY_HTTPS_URL": {
+          "defaultValue": "${{API.SSRF_PROXY_HTTPS_URL}}",
+          "description": "SSRF proxy for outbound HTTPS from workflows/tools.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_URL": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_URL}}",
+          "description": "Plugin Daemon endpoint (private).",
+          "required": false
+        },
+        "PLUGIN_DAEMON_KEY": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_KEY}}",
+          "description": "Key the API uses to call Plugin Daemon.",
+          "required": false
+        },
+        "INNER_API_KEY_FOR_PLUGIN": {
+          "defaultValue": "${{API.INNER_API_KEY_FOR_PLUGIN}}",
+          "description": "Key Plugin Daemon / Agent Backend use to call the API's inner endpoints.",
+          "required": false
+        },
+        "PLUGIN_MAX_PACKAGE_SIZE": {
+          "defaultValue": "${{API.PLUGIN_MAX_PACKAGE_SIZE}}",
+          "description": "Max plugin package size in bytes.",
+          "required": false
+        },
+        "PLUGIN_DAEMON_TIMEOUT": {
+          "defaultValue": "${{API.PLUGIN_DAEMON_TIMEOUT}}",
+          "description": "Timeout (s) for plugin invocations.",
+          "required": false
+        },
+        "MARKETPLACE_ENABLED": {
+          "defaultValue": "${{API.MARKETPLACE_ENABLED}}",
+          "description": "Enable the Dify plugin marketplace.",
+          "required": false
+        },
+        "MARKETPLACE_API_URL": {
+          "defaultValue": "${{API.MARKETPLACE_API_URL}}",
+          "description": "Plugin marketplace API.",
+          "required": false
+        },
+        "AGENT_BACKEND_BASE_URL": {
+          "defaultValue": "${{API.AGENT_BACKEND_BASE_URL}}",
+          "description": "Dify Agent backend endpoint (private).",
+          "required": false
+        },
+        "AGENT_BACKEND_API_TOKEN": {
+          "defaultValue": "${{API.AGENT_BACKEND_API_TOKEN}}",
+          "description": "Bearer token for the Agent backend control plane.",
+          "required": false
+        }
+      }
+    },
+    "Plugin Daemon": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-plugin-daemon:0.6.10-local"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/health/check",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/app/storage"
+      },
+      "variables": {
+        "PORT": {
+          "defaultValue": "5002",
+          "description": "Port Railway health-checks.",
+          "required": false
+        },
+        "SERVER_HOST": {
+          "defaultValue": "[::]",
+          "description": "Listen on IPv4+IPv6.",
+          "required": false
+        },
+        "SERVER_PORT": {
+          "defaultValue": "5002",
+          "description": "Plugin Daemon HTTP port.",
+          "required": false
+        },
+        "SERVER_KEY": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Key the API presents to Plugin Daemon.",
+          "required": false
+        },
+        "DIFY_INNER_API_URL": {
+          "defaultValue": "http://${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "API inner endpoint (private).",
+          "required": false
+        },
+        "DIFY_INNER_API_KEY": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Key Plugin Daemon presents to the API inner endpoints.",
+          "required": false
+        },
+        "DB_TYPE": {
+          "defaultValue": "postgresql",
+          "description": "Database type.",
+          "required": false
+        },
+        "DB_HOST": {
+          "defaultValue": "${{Postgres.PGHOST}}",
+          "description": "Postgres private host.",
+          "required": false
+        },
+        "DB_PORT": {
+          "defaultValue": "${{Postgres.PGPORT}}",
+          "description": "Postgres port.",
+          "required": false
+        },
+        "DB_USERNAME": {
+          "defaultValue": "${{Postgres.PGUSER}}",
+          "description": "Postgres user.",
+          "required": false
+        },
+        "DB_PASSWORD": {
+          "defaultValue": "${{Postgres.PGPASSWORD}}",
+          "description": "Postgres password.",
+          "required": false
+        },
+        "DB_DATABASE": {
+          "defaultValue": "dify_plugin",
+          "description": "Plugin database (created automatically on first boot).",
+          "required": false
+        },
+        "DB_SSL_MODE": {
+          "defaultValue": "disable",
+          "description": "Private network; TLS not required.",
+          "required": false
+        },
+        "DB_MAX_OPEN_CONNS": {
+          "defaultValue": "20",
+          "description": "Max DB connections.",
+          "required": false
+        },
+        "DB_MAX_IDLE_CONNS": {
+          "defaultValue": "5",
+          "description": "Idle DB connections kept open.",
+          "required": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{Redis.REDISHOST}}",
+          "description": "Redis private host.",
+          "required": false
+        },
+        "REDIS_PORT": {
+          "defaultValue": "${{Redis.REDISPORT}}",
+          "description": "Redis port.",
+          "required": false
+        },
+        "REDIS_USERNAME": {
+          "defaultValue": "${{Redis.REDISUSER}}",
+          "description": "Redis user.",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{Redis.REDIS_PASSWORD}}",
+          "description": "Redis password.",
+          "required": false
+        },
+        "REDIS_DB": {
+          "defaultValue": "0",
+          "description": "Redis DB index (keys are prefixed).",
+          "required": false
+        },
+        "PLUGIN_STORAGE_TYPE": {
+          "defaultValue": "local",
+          "description": "Plugin packages are kept on this service's volume.",
+          "required": false
+        },
+        "PLUGIN_STORAGE_LOCAL_ROOT": {
+          "defaultValue": "/app/storage",
+          "description": "Storage root (the volume).",
+          "required": false
+        },
+        "PLUGIN_WORKING_PATH": {
+          "defaultValue": "/app/storage/cwd",
+          "description": "Where installed plugins run (Python envs).",
+          "required": false
+        },
+        "PLUGIN_INSTALLED_PATH": {
+          "defaultValue": "plugin",
+          "description": "Installed plugins sub-directory.",
+          "required": false
+        },
+        "PLUGIN_PACKAGE_CACHE_PATH": {
+          "defaultValue": "plugin_packages",
+          "description": "Package cache sub-directory.",
+          "required": false
+        },
+        "PLUGIN_MEDIA_CACHE_PATH": {
+          "defaultValue": "assets",
+          "description": "Plugin asset cache sub-directory.",
+          "required": false
+        },
+        "MAX_PLUGIN_PACKAGE_SIZE": {
+          "defaultValue": "52428800",
+          "description": "Max plugin package size in bytes.",
+          "required": false
+        },
+        "PLUGIN_MAX_EXECUTION_TIMEOUT": {
+          "defaultValue": "600",
+          "description": "Max plugin execution time (s).",
+          "required": false
+        },
+        "PYTHON_ENV_INIT_TIMEOUT": {
+          "defaultValue": "120",
+          "description": "Timeout (s) to build a plugin's Python environment.",
+          "required": false
+        },
+        "FORCE_VERIFYING_SIGNATURE": {
+          "defaultValue": "true",
+          "description": "Only allow signed marketplace plugins.",
+          "required": false
+        },
+        "PLUGIN_REMOTE_INSTALLING_HOST": {
+          "defaultValue": "0.0.0.0",
+          "description": "Remote plugin-debugging listener (needs a TCP proxy on 5003 to be used).",
+          "required": false
+        },
+        "PLUGIN_REMOTE_INSTALLING_PORT": {
+          "defaultValue": "5003",
+          "description": "Remote plugin-debugging port.",
+          "required": false
+        },
+        "PPROF_ENABLED": {
+          "defaultValue": "false",
+          "description": "Go profiler endpoint.",
+          "required": false
+        },
+        "PIP_MIRROR_URL": {
+          "defaultValue": "",
+          "description": "Optional PyPI mirror for plugin installs.",
+          "required": false
+        }
+      }
+    },
+    "Sandbox": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-sandbox:0.2.15"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/health",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/dependencies"
+      },
+      "variables": {
+        "PORT": {
+          "defaultValue": "8194",
+          "description": "Port Railway health-checks.",
+          "required": false
+        },
+        "SANDBOX_PORT": {
+          "defaultValue": "8194",
+          "description": "Sandbox listen port.",
+          "required": false
+        },
+        "API_KEY": {
+          "defaultValue": "${{secret(40, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Key the API uses to call the code sandbox.",
+          "required": false
+        },
+        "GIN_MODE": {
+          "defaultValue": "release",
+          "description": "Go web framework mode.",
+          "required": false
+        },
+        "WORKER_TIMEOUT": {
+          "defaultValue": "15",
+          "description": "Max code execution time (s).",
+          "required": false
+        },
+        "ENABLE_NETWORK": {
+          "defaultValue": "true",
+          "description": "Allow sandboxed code to make network calls (through the SSRF proxy).",
+          "required": false
+        },
+        "HTTP_PROXY": {
+          "defaultValue": "http://${{SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "Egress via SSRF proxy.",
+          "required": false
+        },
+        "HTTPS_PROXY": {
+          "defaultValue": "http://${{SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "Egress via SSRF proxy.",
+          "required": false
+        },
+        "PIP_MIRROR_URL": {
+          "defaultValue": "",
+          "description": "Optional PyPI mirror for extra Python packages.",
+          "required": false
+        }
+      }
+    },
+    "SSRF Proxy": {
+      "icon": "https://avatars.githubusercontent.com/u/363029?v=4",
+      "source": {
+        "repo": "baranberkay96/dify-railway",
+        "rootDirectory": "/services/ssrf-proxy"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "SSRF_PROXY_MODE": {
+          "defaultValue": "default",
+          "description": "Policy: default = Dify egress proxy.",
+          "required": false
+        },
+        "HTTP_PORT": {
+          "defaultValue": "3128",
+          "description": "Squid listen port.",
+          "required": false
+        },
+        "SSRF_PROXY_ALLOW_PRIVATE_IPS": {
+          "defaultValue": "",
+          "description": "Optional comma-separated CIDRs that workflows may reach despite the private-network block.",
+          "required": false
+        },
+        "SSRF_PROXY_ALLOW_PRIVATE_DOMAINS": {
+          "defaultValue": "",
+          "description": "Optional comma-separated domains (e.g. .railway.internal) that workflows may reach.",
+          "required": false
+        }
+      }
+    },
+    "Agent Backend": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "image": "langgenius/dify-agent-backend:1.17.1"
+      },
+      "startCommand": "uvicorn dify_agent.server.app:app --host :: --port 5050",
+      "preDeployCommand": null,
+      "healthcheckPath": "/docs",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "PORT": {
+          "defaultValue": "5050",
+          "description": "Port Railway health-checks.",
+          "required": false
+        },
+        "DIFY_AGENT_API_TOKEN": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Bearer token the API uses for the Agent control plane.",
+          "required": false
+        },
+        "DIFY_AGENT_SERVER_SECRET_KEY": {
+          "defaultValue": "${{secret(43, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Root secret (43-char base64url = 32 bytes) for Agent Stub token encryption.",
+          "required": false
+        },
+        "DIFY_AGENT_REDIS_URL": {
+          "defaultValue": "redis://${{Redis.REDISUSER}}:${{Redis.REDIS_PASSWORD}}@${{Redis.REDISHOST}}:${{Redis.REDISPORT}}/2",
+          "description": "Agent run store (Redis DB 2).",
+          "required": false
+        },
+        "DIFY_AGENT_PLUGIN_DAEMON_URL": {
+          "defaultValue": "http://${{Plugin Daemon.RAILWAY_PRIVATE_DOMAIN}}:5002",
+          "description": "Plugin Daemon endpoint.",
+          "required": false
+        },
+        "DIFY_AGENT_PLUGIN_DAEMON_API_KEY": {
+          "defaultValue": "${{Plugin Daemon.SERVER_KEY}}",
+          "description": "Plugin Daemon key.",
+          "required": false
+        },
+        "DIFY_AGENT_INNER_API_URL": {
+          "defaultValue": "http://${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "API inner endpoint.",
+          "required": false
+        },
+        "DIFY_AGENT_INNER_API_KEY": {
+          "defaultValue": "${{Plugin Daemon.DIFY_INNER_API_KEY}}",
+          "description": "Must equal the API's INNER_API_KEY_FOR_PLUGIN.",
+          "required": false
+        },
+        "DIFY_AGENT_RUNTIME_BACKEND": {
+          "defaultValue": "local",
+          "description": "Sandbox backend: local (Agent Sandbox service) or e2b.",
+          "required": false
+        },
+        "DIFY_AGENT_LOCAL_SANDBOX_ENDPOINT": {
+          "defaultValue": "http://${{Agent Sandbox.RAILWAY_PRIVATE_DOMAIN}}:5004",
+          "description": "Agent Sandbox (shellctl) endpoint.",
+          "required": false
+        },
+        "DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN": {
+          "defaultValue": "${{secret(48, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Token shared with the Agent Sandbox.",
+          "required": false
+        },
+        "DIFY_AGENT_STUB_API_BASE_URL": {
+          "defaultValue": "http://${{RAILWAY_PRIVATE_DOMAIN}}:5050/agent-stub",
+          "description": "Agent Stub URL the sandbox calls (through Agent SSRF Proxy).",
+          "required": false
+        },
+        "DIFY_AGENT_SANDBOX_FILES_BASE_URL": {
+          "defaultValue": "http://${{API.RAILWAY_PRIVATE_DOMAIN}}:5001",
+          "description": "API base for sandbox file transfers (/files/*).",
+          "required": false
+        },
+        "DIFY_AGENT_RUN_TIMEOUT_SECONDS": {
+          "defaultValue": "3600",
+          "description": "Max agent run time (s).",
+          "required": false
+        }
+      }
+    },
+    "Agent Sandbox": {
+      "icon": "https://avatars.githubusercontent.com/u/127165244?v=4",
+      "source": {
+        "repo": "baranberkay96/dify-railway",
+        "rootDirectory": "/services/agent-sandbox"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": "/healthz",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/home/dify"
+      },
+      "variables": {
+        "PORT": {
+          "defaultValue": "5004",
+          "description": "Port Railway health-checks.",
+          "required": false
+        },
+        "SHELLCTL_AUTH_TOKEN": {
+          "defaultValue": "${{Agent Backend.DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN}}",
+          "description": "Token the Agent Backend presents.",
+          "required": false
+        },
+        "HTTP_PROXY": {
+          "defaultValue": "http://${{Agent SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "Egress via the agent SSRF proxy.",
+          "required": false
+        },
+        "HTTPS_PROXY": {
+          "defaultValue": "http://${{Agent SSRF Proxy.RAILWAY_PRIVATE_DOMAIN}}:3128",
+          "description": "Egress via the agent SSRF proxy.",
+          "required": false
+        },
+        "NO_PROXY": {
+          "defaultValue": "localhost,127.0.0.1",
+          "description": "Hosts that bypass the proxy.",
+          "required": false
+        },
+        "SHELLCTL_ENABLE_PATH_ISOLATION": {
+          "defaultValue": "true",
+          "description": "Landlock path isolation for agent shell jobs. Set false only if jobs fail with Landlock errors.",
+          "required": false
+        }
+      }
+    },
+    "Agent SSRF Proxy": {
+      "icon": "https://avatars.githubusercontent.com/u/363029?v=4",
+      "source": {
+        "repo": "baranberkay96/dify-railway",
+        "rootDirectory": "/services/ssrf-proxy"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": null,
+      "variables": {
+        "SSRF_PROXY_MODE": {
+          "defaultValue": "agent",
+          "description": "Policy: agent = only Agent Stub + API /files/* on the private network, internet otherwise.",
+          "required": false
+        },
+        "HTTP_PORT": {
+          "defaultValue": "3128",
+          "description": "Squid listen port.",
+          "required": false
+        },
+        "DIFY_AGENT_BACKEND_HOST": {
+          "defaultValue": "${{Agent Backend.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Agent Backend private hostname (allowed for /agent-stub/).",
+          "required": false
+        },
+        "DIFY_API_HOST": {
+          "defaultValue": "${{API.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "API private hostname (allowed for /files/).",
+          "required": false
+        },
+        "SSRF_PROXY_ALLOW_PRIVATE_IPS": {
+          "defaultValue": "",
+          "description": "Optional extra private CIDRs the agent may reach.",
+          "required": false
+        },
+        "SSRF_PROXY_ALLOW_PRIVATE_DOMAINS": {
+          "defaultValue": "",
+          "description": "Optional extra private domains the agent may reach.",
+          "required": false
+        }
+      }
+    },
+    "Weaviate": {
+      "icon": "https://avatars.githubusercontent.com/u/37794290?v=4",
+      "source": {
+        "image": "semitechnologies/weaviate:1.39.11"
+      },
+      "startCommand": "/bin/weaviate --host :: --port 8080 --scheme http",
+      "preDeployCommand": null,
+      "healthcheckPath": "/v1/.well-known/ready",
+      "healthcheckTimeout": 300,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/var/lib/weaviate"
+      },
+      "variables": {
+        "PORT": {
+          "defaultValue": "8080",
+          "description": "REST port (gRPC is 50051).",
+          "required": false
+        },
+        "PERSISTENCE_DATA_PATH": {
+          "defaultValue": "/var/lib/weaviate",
+          "description": "Data directory (the volume).",
+          "required": false
+        },
+        "CLUSTER_HOSTNAME": {
+          "defaultValue": "node1",
+          "description": "Stable node name; do not change after first boot.",
+          "required": false
+        },
+        "QUERY_DEFAULTS_LIMIT": {
+          "defaultValue": "25",
+          "description": "Default query limit.",
+          "required": false
+        },
+        "DEFAULT_VECTORIZER_MODULE": {
+          "defaultValue": "none",
+          "description": "Dify sends its own embeddings.",
+          "required": false
+        },
+        "AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED": {
+          "defaultValue": "false",
+          "description": "Require an API key.",
+          "required": false
+        },
+        "AUTHENTICATION_APIKEY_ENABLED": {
+          "defaultValue": "true",
+          "description": "Enable API-key auth.",
+          "required": false
+        },
+        "AUTHENTICATION_APIKEY_ALLOWED_KEYS": {
+          "defaultValue": "${{secret(40, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "API key Dify uses.",
+          "required": false
+        },
+        "AUTHENTICATION_APIKEY_USERS": {
+          "defaultValue": "dify",
+          "description": "User mapped to the API key.",
+          "required": false
+        },
+        "AUTHORIZATION_ADMINLIST_ENABLED": {
+          "defaultValue": "true",
+          "description": "Admin-list authorization.",
+          "required": false
+        },
+        "AUTHORIZATION_ADMINLIST_USERS": {
+          "defaultValue": "${{AUTHENTICATION_APIKEY_USERS}}",
+          "description": "Admin users.",
+          "required": false
+        },
+        "DISABLE_TELEMETRY": {
+          "defaultValue": "true",
+          "description": "Disable Weaviate telemetry.",
+          "required": false
+        }
+      }
+    },
+    "Postgres": {
+      "icon": "https://devicons.railway.app/i/postgresql.svg",
+      "source": {
+        "image": "ghcr.io/railwayapp-templates/postgres-ssl:18"
+      },
+      "startCommand": null,
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/var/lib/postgresql/data"
+      },
+      "variables": {
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "Location where the database will be initialized",
+          "required": false
+        },
+        "PGHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Railway Private Domain Name.",
+          "required": false
+        },
+        "PGPORT": {
+          "defaultValue": "5432",
+          "description": "Port to connect to Postgres.",
+          "required": false
+        },
+        "PGUSER": {
+          "defaultValue": "${{ POSTGRES_USER }}",
+          "description": "Required variable for Data panel",
+          "required": false
+        },
+        "PGDATABASE": {
+          "defaultValue": "${{POSTGRES_DB}}",
+          "description": "Required variable for the data panel.",
+          "required": false
+        },
+        "PGPASSWORD": {
+          "defaultValue": "${{POSTGRES_PASSWORD}}",
+          "description": "Required variable for Data panel",
+          "required": false
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "railway",
+          "description": "Default database created when image is started.",
+          "required": false
+        },
+        "DATABASE_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}",
+          "description": "URL to connect to Postgres database.",
+          "required": false
+        },
+        "POSTGRES_USER": {
+          "defaultValue": "postgres",
+          "description": "User to connect to Postgres DB",
+          "required": false
+        },
+        "SSL_CERT_DAYS": {
+          "defaultValue": "820",
+          "description": "SSL certificate expiry in days.",
+          "required": false
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{ secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\") }}",
+          "description": "Password to connect to DB",
+          "required": false
+        },
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+          "defaultValue": "60",
+          "description": "Allow Postgres to cleanly shut down",
+          "required": false
+        }
+      }
+    },
+    "Redis": {
+      "icon": "https://cdn.sanity.io/images/sy1jschh/production/0ce0bfdcfbdbf69662b1116671f97c2dd788b655-157x157.svg",
+      "source": {
+        "image": "redis:8.2"
+      },
+      "startCommand": "/bin/sh -c \"rm -rf $RAILWAY_VOLUME_MOUNT_PATH/lost+found/ && exec docker-entrypoint.sh redis-server --requirepass $REDIS_PASSWORD --save 60 1 --dir $RAILWAY_VOLUME_MOUNT_PATH\"",
+      "preDeployCommand": null,
+      "healthcheckPath": null,
+      "healthcheckTimeout": null,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 10,
+      "numReplicas": 1,
+      "cronSchedule": null,
+      "publicDomain": false,
+      "targetPort": null,
+      "tcpProxy": null,
+      "volume": {
+        "mountPath": "/data"
+      },
+      "variables": {
+        "REDISHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Private network hostname of the Redis service, only resolvable from services in the same environment",
+          "required": false
+        },
+        "REDISPORT": {
+          "defaultValue": "6379",
+          "description": "Port that Redis listens on",
+          "required": false
+        },
+        "REDISUSER": {
+          "defaultValue": "default",
+          "description": "Username for authenticating with Redis",
+          "required": false
+        },
+        "REDIS_URL": {
+          "defaultValue": "redis://${{ REDISUSER }}:${{ REDIS_PASSWORD }}@${{ REDISHOST }}:${{ REDISPORT }}",
+          "description": "Connection string for connecting to Redis using the private network",
+          "required": false
+        },
+        "REDISPASSWORD": {
+          "defaultValue": "${{REDIS_PASSWORD}}",
+          "description": "Alias of REDIS_PASSWORD for clients that expect the unseparated name",
+          "required": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{ secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\") }}",
+          "description": "Randomly generated password for authenticating with Redis",
+          "required": false
+        }
+      }
+    }
+  },
+  "buckets": [
+    "Bucket"
+  ]
+}
