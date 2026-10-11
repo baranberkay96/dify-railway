@@ -1,5 +1,7 @@
 # Deploy and Host Dify with Railway
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/dify-v1-ai-app-studio)
+
 Dify is an open-source platform for building LLM applications: chatbots, RAG knowledge bases, agents and multi-step workflows, designed in a visual editor and published as web apps or APIs. This community template runs the complete Dify 1.17 stack on Railway behind a single HTTPS URL.
 
 ## About Hosting Dify
