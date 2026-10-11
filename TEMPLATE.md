@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Name | **Dify v1 AI App Studio** (version label `v1` = Dify major version; Dify tags releases as `v1.x.y`) |
-| Description | Visual agent & RAG builder with plugins, code sandbox, workers and vector DB. (77 chars) |
+| Description | Visual agent & RAG builder with plugins, sandbox, workers and a vector DB. (77 chars) |
 | Category | AI/ML |
 | Tags | dify, llm, agents, rag, workflow, weaviate, ai |
 | User input at deploy | **None.** All keys and passwords are generated. Optional later: email (`MAIL_TYPE` + SMTP/Resend vars). |

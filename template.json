@@ -1,6 +1,6 @@
 {
   "name": "Dify v1 AI App Studio",
-  "description": "Visual agent & RAG builder with plugins, code sandbox, workers and vector DB.",
+  "description": "Visual agent & RAG builder with plugins, sandbox, workers and a vector DB.",
   "category": "AI/ML",
   "tags": [
     "dify",
