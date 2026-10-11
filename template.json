@@ -1858,7 +1858,7 @@
       "source": {
         "image": "langgenius/dify-agent-backend:1.17.1"
       },
-      "startCommand": "uvicorn dify_agent.server.app:app --host :: --port 5050",
+      "startCommand": "uvicorn dify_agent.server.app:app --host 0.0.0.0 --port 5050",
       "preDeployCommand": null,
       "healthcheckPath": "/docs",
       "healthcheckTimeout": 300,

@@ -755,3 +755,7 @@ Prices: RAM $10/GB-month, vCPU $20/vCPU-month, volume $0.15/GB-month. Estimates 
 - **Squid on Railway IPv4 ranges**: client ACL covers `10/8`, `100.64/10`, RFC1918 and `fc00::/7`. If proxied requests are denied with `403` from Squid, check the source address in the Squid access log and extend `client_localnet`.
 - **Dify license**: Dify's Open Source License forbids operating a multi-tenant (multi-workspace for third parties) service and removing the console logo/copyright without a commercial license. Single-organisation self-hosting is fine. Mentioned in README.
 - **Healthcheck for Web** uses `/signin`; if a future Dify release redirects it server-side, switch to `/install` or remove the healthcheck.
+
+## Deploy test findings (2026-10-11)
+
+Agent Backend never became healthy: single-worker uvicorn bound to `::` is IPv6-only (asyncio sets IPV6_V6ONLY), and Railway's healthcheck connects over IPv4. Reproduced locally. Fix: `--host 0.0.0.0` (new Railway environments resolve private hostnames to IPv4 too). All other 14 services passed.
